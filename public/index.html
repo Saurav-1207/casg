@@ -2,81 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure UPI Checkout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Checkout</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-sm bg-white rounded-[2.5rem] p-6 shadow-2xl">
-        <div class="flex justify-between items-center mb-6">
-            <span class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase">Verified Merchant</span>
-            <span class="text-gray-400 text-[10px] font-mono" id="txn-id">TRX...</span>
+    <div class="w-full max-w-sm mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden">
+        <div class="bg-indigo-600 p-6 text-center">
+            <h2 class="text-white text-lg font-bold">Confirm Payment</h2>
+            <p class="text-indigo-200 text-sm">Order ID: <span id="oid">---</span></p>
         </div>
 
-        <div class="text-center mb-8">
-            <p class="text-gray-500 text-sm font-medium">Payable Amount</p>
-            <h1 class="text-4xl font-black text-slate-900">₹1.00</h1>
-        </div>
-
-        <div class="bg-slate-50 rounded-3xl p-4 mb-6 border border-slate-100 flex flex-col items-center">
-            <div id="qr-container" class="bg-white p-2 rounded-xl shadow-sm mb-3">
-                <img id="main-qr" src="" class="w-40 h-40">
+        <div class="p-8 text-center">
+            <div class="mb-6">
+                <span class="text-4xl font-black text-gray-900">₹1.00</span>
             </div>
-            <p class="text-[10px] text-slate-400 font-medium">Screenshot & Scan if buttons fail</p>
-        </div>
 
-        <div class="space-y-3" id="action-area">
-            <button onclick="openApp('phonepe')" class="w-full py-4 bg-[#5f259f] text-white rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition">
-                Open PhonePe
-            </button>
-            <button onclick="openApp('paytm')" class="w-full py-4 bg-[#00baf2] text-white rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition">
-                Open Paytm
-            </button>
-        </div>
+            <a id="upi-link" href="#" class="block w-full py-4 bg-green-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-green-700 transition-all active:scale-95 mb-4">
+                PAY NOW
+            </a>
 
-        <p class="text-center text-[10px] text-slate-300 mt-6 uppercase tracking-widest font-bold">Secure Encrypted Session</p>
+            <div class="relative flex py-5 items-center">
+                <div class="flex-grow border-t border-gray-200"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase font-bold">Or Scan QR</span>
+                <div class="flex-grow border-t border-gray-200"></div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-2xl inline-block border border-gray-100">
+                <img id="qr-img" src="" class="w-40 h-40 mx-auto">
+            </div>
+            
+            <p class="text-[10px] text-gray-400 mt-6 leading-tight">
+                If "Pay Now" shows a risk error, it is a restriction from your bank. <br> 
+                <strong>Take a screenshot and scan the QR inside your app.</strong>
+            </p>
+        </div>
     </div>
 
     <script>
-        // DATA CONFIG
+        // CONFIG - CHANGE THESE
         const VPA = "paytm.s1h4uwq@pty";
-        const NAME = "Order_Payment";
+        const NAME = "Payment Service";
         const AMOUNT = "1.00";
         
-        // Generate a clean 12-digit numeric ID for Paytm compatibility
-        const TR = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-        document.getElementById('txn-id').innerText = "TXN" + TR.substring(8);
+        // Generate a 12-digit numeric Ref ID (UTR Style)
+        const TR = Math.floor(Math.random() * 899999999999 + 100000000000).toString();
+        document.getElementById('oid').innerText = TR.substring(6);
 
-        // Standard UPI String
-        const upiString = `upi://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=${AMOUNT}&cu=INR&tr=${TR}`;
+        // THE BYPASS STRING
+        // We remove mc, mode, and purpose. For personal VPAs, these trigger the error.
+        const upiData = `upi://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=${AMOUNT}&cu=INR&tr=${TR}`;
 
-        // 1. SET QR CODE (The ultimate backup)
-        document.getElementById('main-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString + "&mode=02")}`;
+        // Set the Link
+        document.getElementById('upi-link').href = upiData;
 
-        // 2. APP REDIRECT LOGIC
-        function openApp(app) {
-            let intent = "";
-            
-            // We use the most basic intent possible. 
-            // Over-complicating it with mc/purpose codes on personal VPAs triggers the risk policy.
-            if (app === 'phonepe') {
-                intent = `phonepe://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=${AMOUNT}&tr=${TR}&cu=INR`;
-            } else if (app === 'paytm') {
-                intent = `paytmmp://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=${AMOUNT}&tr=${TR}&cu=INR`;
-            }
-
-            // The Bypass Trick: Launching via a user-initiated timeout
-            const start = Date.now();
-            window.location.href = intent;
-
-            // If the app doesn't open within 2 seconds, nudge the user to use the QR
-            setTimeout(() => {
-                if (Date.now() - start < 2500) {
-                    alert("If the app didn't open or showed a Risk error, please Screenshot the QR code and scan it inside your UPI app.");
-                }
-            }, 2000);
-        }
+        // Set the QR
+        document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiData)}`;
     </script>
 </body>
 </html>
