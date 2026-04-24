@@ -3,59 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Pay</title>
+    <title>Checkout | Secure Payment</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-[#f4f7f9] flex items-center justify-center min-h-screen">
-    <div class="w-full max-w-sm mx-4 bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
+<body class="bg-[#F8FAFC] flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-sm mx-4 bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 border border-gray-100">
         <div class="text-center mb-8">
-            <p class="text-gray-500 text-sm font-medium">Paying to</p>
-            <h1 class="text-xl font-bold text-gray-800">Merchant Payment</h1>
+            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="浸9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+            </div>
+            <p class="text-gray-500 text-xs uppercase tracking-widest font-semibold">Secure Checkout</p>
+            <h1 class="text-xl font-extrabold text-gray-800 mt-1">Payment Request</h1>
         </div>
 
-        <div class="bg-gray-50 rounded-2xl p-4 mb-8 text-center">
-            <span class="text-gray-400 text-lg">₹</span>
-            <span class="text-4xl font-black text-gray-900">1.00</span>
+        <div class="bg-gray-50 rounded-3xl p-6 mb-8 text-center border border-gray-100">
+            <span class="text-gray-400 text-xl font-medium">₹</span>
+            <span class="text-5xl font-black text-gray-900 tracking-tight">1.00</span>
+            <p class="text-gray-400 text-xs mt-2 italic">Ref: <span id="display-ref">...</span></p>
         </div>
 
         <div class="space-y-3">
-            <button onclick="triggerPay('phonepe')" class="w-full py-4 bg-[#5f259f] text-white rounded-2xl font-bold flex items-center justify-center gap-2">
-                Pay with PhonePe
+            <button onclick="triggerPay('phonepe')" class="w-full py-4 bg-[#5f259f] hover:bg-[#4d1e82] text-white rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-purple-100">
+                <span>Pay with PhonePe</span>
             </button>
-            <button onclick="triggerPay('paytm')" class="w-full py-4 bg-[#00baf2] text-white rounded-2xl font-bold flex items-center justify-center gap-2">
-                Pay with Paytm
+
+            <button onclick="triggerPay('paytm')" class="w-full py-4 bg-[#00baf2] hover:bg-[#009ed1] text-white rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-blue-100">
+                <span>Pay with Paytm</span>
             </button>
-            <button onclick="triggerPay('gpay')" class="w-full py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl font-bold flex items-center justify-center gap-2">
-                Google Pay
+
+            <button onclick="triggerPay('gpay')" class="w-full py-4 bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-700 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95">
+                <span>Google Pay</span>
             </button>
         </div>
+
+        <p class="text-center text-gray-400 text-[10px] mt-8 uppercase tracking-tighter">
+            Powered by Secure Intent Routing
+        </p>
     </div>
 
     <script>
         async function triggerPay(app) {
-            const res = await fetch('/create-order', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ amount: 1.0 })
-            });
-            const data = await res.json();
-            
-            // Your VPA from the image
-            const vpa = "paytm.s1h4uwq@pty";
-            const name = "Merchant";
-            const tr = data.order_id; // Unique ID from Cashfree to prevent Risk errors
-            const am = "1.00";
+            try {
+                // 1. Call your Railway Backend to create the order session
+                const res = await fetch('/create-order', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ amount: 1.0 })
+                });
+                
+                const data = await res.json();
+                
+                // 2. THE PAYTM FIX: 
+                // We use a short, alphanumeric Ref ID. Max 12 chars is safest.
+                const tr = "TXN" + Math.floor(Math.random() * 100000000); 
+                document.getElementById('display-ref').innerText = tr;
 
-            let intent = "";
-            if (app === 'phonepe') {
-                intent = `phonepe://pay?pa=${vpa}&pn=${name}&am=${am}&tr=${tr}&mc=5411&cu=INR&mode=02`;
-            } else if (app === 'paytm') {
-                intent = `paytmmp://pay?pa=${vpa}&pn=${name}&am=${am}&tr=${tr}&mc=5411&cu=INR&mode=02`;
-            } else if (app === 'gpay') {
-                intent = `tez://upi/pay?pa=${vpa}&pn=${name}&am=${am}&tr=${tr}&mc=5411&cu=INR`;
+                // 3. Your VPA details
+                const vpa = "paytm.s1h4uwq@pty";
+                const name = "Merchant";
+                const am = "1.00";
+                const cu = "INR";
+
+                let intent = "";
+
+                if (app === 'phonepe') {
+                    // Full parameters for PhonePe
+                    intent = `phonepe://pay?pa=${vpa}&pn=${encodeURIComponent(name)}&am=${am}&tr=${tr}&mc=5411&cu=${cu}&mode=02`;
+                } 
+                else if (app === 'paytm') {
+                    // Simplified for Paytm to avoid Ref_ID Length Error
+                    intent = `paytmmp://pay?pa=${vpa}&pn=${encodeURIComponent(name)}&am=${am}&tr=${tr}&cu=${cu}`;
+                } 
+                else if (app === 'gpay') {
+                    // Standard GPay Intent
+                    intent = `tez://upi/pay?pa=${vpa}&pn=${encodeURIComponent(name)}&am=${am}&tr=${tr}&cu=${cu}`;
+                }
+
+                // 4. Trigger the redirect
+                window.location.href = intent;
+
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Connection error. Check Railway logs.");
             }
-
-            window.location.href = intent;
         }
     </script>
 </body>
