@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+        <h2 class="text-xl font-bold mb-4 text-center">Complete Payment</h2>
+        <div class="text-3xl font-extrabold text-center mb-6 text-blue-600">₹1.00</div>
+
+        <div class="space-y-4">
+            <button onclick="payWith('phonepe')" class="w-full flex items-center justify-between p-4 border rounded-xl hover:bg-purple-50 transition">
+                <span class="font-medium">PhonePe</span>
+                <img src="https://path-to-phonepe-icon.png" class="h-6">
+            </button>
+
+            <button onclick="payWith('gpay')" class="w-full flex items-center justify-between p-4 border rounded-xl hover:bg-blue-50 transition">
+                <span class="font-medium">Google Pay</span>
+                <img src="https://path-to-gpay-icon.png" class="h-6">
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function payWith(app) {
+            // 1. Get Session from your backend
+            const res = await fetch('/.netlify/functions/create-order', {
+                method: 'POST',
+                body: JSON.stringify({ amount: 1.0, customerId: "user123" })
+            });
+            const data = await res.json();
+            
+            const sessionId = data.payment_session_id;
+
+            // 2. Construct the MWeb Intent
+            // This is the format your friend is likely using to bypass risk checks
+            let intentUrl = "";
+            
+            if (app === 'phonepe') {
+                intentUrl = `phonepe://pay?pa=paytm.s1h4uwq@pty&pn=Merchant&am=1.0&tr=${data.order_id}&mc=5411&mode=02&purpose=00`;
+            } else if (app === 'gpay') {
+                intentUrl = `tez://upi/pay?pa=paytm.s1h4uwq@pty&pn=Merchant&am=1.0&tr=${data.order_id}&mc=5411`;
+            }
+
+            // Trigger the App
+            window.location.href = intentUrl;
+        }
+    </script>
+</body>
+</html>
