@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Pay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#f4f7f9] flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-sm mx-4 bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
+        <div class="text-center mb-8">
+            <p class="text-gray-500 text-sm font-medium">Paying to</p>
+            <h1 class="text-xl font-bold text-gray-800">Merchant Payment</h1>
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl p-4 mb-8 text-center">
+            <span class="text-gray-400 text-lg">₹</span>
+            <span class="text-4xl font-black text-gray-900">1.00</span>
+        </div>
+
+        <div class="space-y-3">
+            <button onclick="triggerPay('phonepe')" class="w-full py-4 bg-[#5f259f] text-white rounded-2xl font-bold flex items-center justify-center gap-2">
+                Pay with PhonePe
+            </button>
+            <button onclick="triggerPay('paytm')" class="w-full py-4 bg-[#00baf2] text-white rounded-2xl font-bold flex items-center justify-center gap-2">
+                Pay with Paytm
+            </button>
+            <button onclick="triggerPay('gpay')" class="w-full py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl font-bold flex items-center justify-center gap-2">
+                Google Pay
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function triggerPay(app) {
+            const res = await fetch('/create-order', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ amount: 1.0 })
+            });
+            const data = await res.json();
+            
+            // Your VPA from the image
+            const vpa = "paytm.s1h4uwq@pty";
+            const name = "Merchant";
+            const tr = data.order_id; // Unique ID from Cashfree to prevent Risk errors
+            const am = "1.00";
+
+            let intent = "";
+            if (app === 'phonepe') {
+                intent = `phonepe://pay?pa=${vpa}&pn=${name}&am=${am}&tr=${tr}&mc=5411&cu=INR&mode=02`;
+            } else if (app === 'paytm') {
+                intent = `paytmmp://pay?pa=${vpa}&pn=${name}&am=${am}&tr=${tr}&mc=5411&cu=INR&mode=02`;
+            } else if (app === 'gpay') {
+                intent = `tez://upi/pay?pa=${vpa}&pn=${name}&am=${am}&tr=${tr}&mc=5411&cu=INR`;
+            }
+
+            window.location.href = intent;
+        }
+    </script>
+</body>
+</html>
