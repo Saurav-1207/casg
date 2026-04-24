@@ -2,63 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Secure Checkout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-[#f2f4f7] flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-sm mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden">
-        <div class="bg-indigo-600 p-6 text-center">
-            <h2 class="text-white text-lg font-bold">Confirm Payment</h2>
-            <p class="text-indigo-200 text-sm">Order ID: <span id="oid">---</span></p>
+    <div class="w-full max-w-sm bg-white rounded-[2rem] shadow-xl p-8 border border-gray-200">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-black text-gray-800">Secure Pay</h1>
+            <p class="text-gray-400 text-sm font-medium">Verify & Pay</p>
         </div>
 
-        <div class="p-8 text-center">
-            <div class="mb-6">
-                <span class="text-4xl font-black text-gray-900">₹1.00</span>
-            </div>
+        <div class="bg-indigo-50 rounded-2xl p-6 mb-8 text-center border border-indigo-100">
+            <span class="text-indigo-600 text-4xl font-black">₹1.00</span>
+        </div>
 
-            <a id="upi-link" href="#" class="block w-full py-4 bg-green-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-green-700 transition-all active:scale-95 mb-4">
-                PAY NOW
+        <div class="space-y-4">
+            <a id="pay-button" href="javascript:void(0)" onclick="handlePayment()" class="flex items-center justify-center w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 active:scale-95 transition-transform">
+                CLICK TO PAY
             </a>
-
-            <div class="relative flex py-5 items-center">
-                <div class="flex-grow border-t border-gray-200"></div>
-                <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase font-bold">Or Scan QR</span>
-                <div class="flex-grow border-t border-gray-200"></div>
-            </div>
-
-            <div class="bg-gray-50 p-4 rounded-2xl inline-block border border-gray-100">
-                <img id="qr-img" src="" class="w-40 h-40 mx-auto">
-            </div>
             
-            <p class="text-[10px] text-gray-400 mt-6 leading-tight">
-                If "Pay Now" shows a risk error, it is a restriction from your bank. <br> 
-                <strong>Take a screenshot and scan the QR inside your app.</strong>
+            <p class="text-center text-[11px] text-gray-400 leading-relaxed uppercase tracking-tighter">
+                Clicking will open your UPI apps.<br>If blocked, use the QR below.
             </p>
+        </div>
+
+        <div class="mt-8 pt-8 border-t border-dashed border-gray-200 text-center">
+            <div class="inline-block p-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <img id="qr-code" src="" class="w-36 h-36 mx-auto">
+            </div>
+            <p class="text-[10px] text-gray-400 mt-2">Long press to download QR</p>
         </div>
     </div>
 
     <script>
-        // CONFIG - CHANGE THESE
+        // Use a 12-digit numeric Ref ID (The UTR format banks trust)
+        const TR = Math.floor(100000000000 + Math.random() * 900000000000).toString();
         const VPA = "paytm.s1h4uwq@pty";
-        const NAME = "Payment Service";
-        const AMOUNT = "1.00";
+        const NAME = "Web_Payment";
         
-        // Generate a 12-digit numeric Ref ID (UTR Style)
-        const TR = Math.floor(Math.random() * 899999999999 + 100000000000).toString();
-        document.getElementById('oid').innerText = TR.substring(6);
+        // Construct the intent URL
+        // We REMOVE 'mc' and 'mode' because on personal VPAs they trigger RISK POLICY
+        const upiUrl = `upi://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&cu=INR&tr=${TR}`;
 
-        // THE BYPASS STRING
-        // We remove mc, mode, and purpose. For personal VPAs, these trigger the error.
-        const upiData = `upi://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=${AMOUNT}&cu=INR&tr=${TR}`;
+        // Set QR source
+        document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
 
-        // Set the Link
-        document.getElementById('upi-link').href = upiData;
+        function handlePayment() {
+            // First attempt: General UPI intent (Shows the App Picker)
+            // This is the "Friend's way" - it lets the OS handle the risk, not the browser
+            window.location.href = upiUrl;
 
-        // Set the QR
-        document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiData)}`;
+            // Second attempt: Fallback after 1 second if app doesn't open
+            setTimeout(() => {
+                window.location.href = `paytmmp://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&cu=INR&tr=${TR}`;
+            }, 1500);
+        }
     </script>
 </body>
 </html>
