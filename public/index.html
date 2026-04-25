@@ -3,61 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout</title>
+    <title>Merchant Checkout</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#f2f4f7] flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-sm bg-white rounded-[2rem] shadow-xl p-8 border border-gray-200">
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-black text-gray-800">Secure Pay</h1>
-            <p class="text-gray-400 text-sm font-medium">Verify & Pay</p>
-        </div>
-
-        <div class="bg-indigo-50 rounded-2xl p-6 mb-8 text-center border border-indigo-100">
-            <span class="text-indigo-600 text-4xl font-black">₹1.00</span>
-        </div>
-
-        <div class="space-y-4">
-            <a id="pay-button" href="javascript:void(0)" onclick="handlePayment()" class="flex items-center justify-center w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 active:scale-95 transition-transform">
-                CLICK TO PAY
-            </a>
-            
-            <p class="text-center text-[11px] text-gray-400 leading-relaxed uppercase tracking-tighter">
-                Clicking will open your UPI apps.<br>If blocked, use the QR below.
-            </p>
-        </div>
-
-        <div class="mt-8 pt-8 border-t border-dashed border-gray-200 text-center">
-            <div class="inline-block p-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                <img id="qr-code" src="" class="w-36 h-36 mx-auto">
+    <div class="w-full max-w-sm bg-white p-8 rounded-[2.5rem] shadow-2xl text-center border border-gray-100">
+        <div class="mb-6">
+            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
+                <span class="text-white text-2xl font-bold">A</span>
             </div>
-            <p class="text-[10px] text-gray-400 mt-2">Long press to download QR</p>
+            <h1 class="text-xl font-bold text-gray-800 flex items-center justify-center gap-1">
+                Audiva Fm Private Limited
+                <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"></path></svg>
+            </h1>
+            <p class="text-gray-400 text-xs mt-1">paytm.s1h4uwq@pty</p>
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl p-4 mb-8">
+            <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Amount to Pay</p>
+            <h2 class="text-4xl font-black text-gray-900">₹1.00</h2>
+        </div>
+
+        <button onclick="payNow()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 active:scale-95 transition-all">
+            Proceed Securely
+        </button>
+
+        <div class="mt-8 pt-6 border-t border-dashed border-gray-200">
+            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-4">Scan QR if button fails</p>
+            <img id="qr-display" src="" class="w-32 h-32 mx-auto opacity-80">
         </div>
     </div>
 
     <script>
-        // Use a 12-digit numeric Ref ID (The UTR format banks trust)
-        const TR = Math.floor(100000000000 + Math.random() * 900000000000).toString();
         const VPA = "paytm.s1h4uwq@pty";
-        const NAME = "Web_Payment";
+        const NAME = "Audiva Fm Private Limited";
+        const MC = "5732"; // This is the Merchant Category Code for "Audio/Video Stores"
         
-        // Construct the intent URL
-        // We REMOVE 'mc' and 'mode' because on personal VPAs they trigger RISK POLICY
-        const upiUrl = `upi://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&cu=INR&tr=${TR}`;
+        // Use a 12-digit number for the transaction ref
+        const TR = Math.floor(100000000000 + Math.random() * 900000000000).toString();
 
-        // Set QR source
-        document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+        // THE MERCHANT INTENT STRING
+        // For Verified Merchants, mc and mode=02 are MANDATORY to avoid Risk Policy
+        const intent = `upi://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&cu=INR&mc=${MC}&tr=${TR}&mode=02&orgid=189999`;
 
-        function handlePayment() {
-            // First attempt: General UPI intent (Shows the App Picker)
-            // This is the "Friend's way" - it lets the OS handle the risk, not the browser
-            window.location.href = upiUrl;
+        // Load QR
+        document.getElementById('qr-display').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(intent)}`;
 
-            // Second attempt: Fallback after 1 second if app doesn't open
+        function payNow() {
+            // First attempt: Direct Intent
+            window.location.href = intent;
+            
+            // Second attempt: Specific Paytm direct trigger
             setTimeout(() => {
-                window.location.href = `paytmmp://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&cu=INR&tr=${TR}`;
-            }, 1500);
+                window.location.href = `paytmmp://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&mc=${MC}&tr=${TR}&mode=02`;
+            }, 1000);
         }
     </script>
 </body>
