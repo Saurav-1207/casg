@@ -3,61 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merchant Checkout</title>
+    <title>Audiva Fm - Secure Pay</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+<body class="bg-[#0f172a] flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-sm bg-white p-8 rounded-[2.5rem] shadow-2xl text-center border border-gray-100">
-        <div class="mb-6">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
-                <span class="text-white text-2xl font-bold">A</span>
+    <div class="w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
+        <div class="bg-[#002e6e] p-8 text-center relative">
+            <div class="absolute top-4 right-4 bg-green-400 w-3 h-3 rounded-full animate-ping"></div>
+            <div class="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <img src="https://p7.hiclipart.com/preview/203/732/665/paytm-e-commerce-payment-system-bank-business-bank.jpg" class="w-12 h-12">
             </div>
-            <h1 class="text-xl font-bold text-gray-800 flex items-center justify-center gap-1">
-                Audiva Fm Private Limited
-                <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"></path></svg>
+            <h1 class="text-white font-bold text-lg flex items-center justify-center gap-1">
+                Audiva Fm Private Ltd
+                <span class="text-blue-400">●</span>
             </h1>
-            <p class="text-gray-400 text-xs mt-1">paytm.s1h4uwq@pty</p>
+            <p class="text-blue-200 text-xs font-mono">paytm.s1h4uwq@pty</p>
         </div>
 
-        <div class="bg-gray-50 rounded-2xl p-4 mb-8">
-            <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Amount to Pay</p>
-            <h2 class="text-4xl font-black text-gray-900">₹1.00</h2>
-        </div>
+        <div class="p-8">
+            <div class="text-center mb-8">
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Amount Payable</p>
+                <h2 class="text-5xl font-black text-gray-900 mt-2">₹1.00</h2>
+            </div>
 
-        <button onclick="payNow()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 active:scale-95 transition-all">
-            Proceed Securely
-        </button>
+            <button onclick="launchApp()" class="w-full py-4 bg-[#002e6e] text-white rounded-2xl font-bold text-lg shadow-xl active:scale-95 transition-all mb-4">
+                Proceed Securely
+            </button>
 
-        <div class="mt-8 pt-6 border-t border-dashed border-gray-200">
-            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-4">Scan QR if button fails</p>
-            <img id="qr-display" src="" class="w-32 h-32 mx-auto opacity-80">
+            <button onclick="downloadQR()" class="w-full py-3 bg-gray-100 text-gray-600 rounded-2xl font-semibold text-sm border border-gray-200 active:scale-95 transition-all">
+                Save QR to Gallery
+            </button>
+
+            <div class="mt-8 text-center">
+                <div class="inline-block p-4 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+                    <img id="final-qr" src="" class="w-40 h-40">
+                </div>
+                <p class="text-[10px] text-gray-400 mt-4 leading-relaxed">
+                    If "Proceed" gives a risk error: <br>
+                    <strong>1. Save QR</strong> → <strong>2. Open Paytm</strong> → <strong>3. Scan from Gallery</strong>
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
         const VPA = "paytm.s1h4uwq@pty";
         const NAME = "Audiva Fm Private Limited";
-        const MC = "5732"; // This is the Merchant Category Code for "Audio/Video Stores"
-        
-        // Use a 12-digit number for the transaction ref
-        const TR = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+        // Unique ID for every refresh
+        const TR = "AUD" + Math.floor(Math.random() * 1000000000);
 
-        // THE MERCHANT INTENT STRING
-        // For Verified Merchants, mc and mode=02 are MANDATORY to avoid Risk Policy
-        const intent = `upi://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&cu=INR&mc=${MC}&tr=${TR}&mode=02&orgid=189999`;
+        // The "Scan-Style" Intent (Bypasses most browser blocks)
+        const intent = `upi://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&cu=INR&mc=5732&tr=${TR}&mode=02&orgid=189999`;
 
-        // Load QR
-        document.getElementById('qr-display').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(intent)}`;
+        // Set QR
+        const qrImg = document.getElementById('final-qr');
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(intent)}`;
+        qrImg.src = qrUrl;
 
-        function payNow() {
-            // First attempt: Direct Intent
+        function launchApp() {
+            // Force the universal intent (This triggers the OS App Picker)
             window.location.href = intent;
-            
-            // Second attempt: Specific Paytm direct trigger
-            setTimeout(() => {
-                window.location.href = `paytmmp://pay?pa=${VPA}&pn=${encodeURIComponent(NAME)}&am=1.00&mc=${MC}&tr=${TR}&mode=02`;
-            }, 1000);
+        }
+
+        function downloadQR() {
+            // Opens QR in new tab for easy saving
+            window.open(qrUrl, '_blank');
+            alert("QR Opened! Save it and scan inside your UPI app to complete payment.");
         }
     </script>
 </body>
